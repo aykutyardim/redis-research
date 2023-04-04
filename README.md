@@ -328,3 +328,47 @@ public void subscribeToOrderMessages() {
 ```
 
 - In this example, the RedisTemplate class is used to connect to Redis and publish/subscribe to channels. The publishOrderMessage() method in the order service publishes an order-related message to the "orders" channel using the convertAndSend() method of RedisTemplate. The subscribeToOrderMessages() method in the payment service subscribes to the "orders" channel using the execute() method of RedisTemplate, and processes the order-related messages received on that channel in the onMessage() method of the MessageListener interface.
+
+### Generic Serializer
+
+> **Order Service**
+
+```
+@Configuration
+public class RedisConfig {
+ 
+  @Bean
+  public RedisTemplate<String, Object> redisTemplate(RedisConnectionFactory connectionFactory) {
+    RedisTemplate<String, Object> template = new RedisTemplate<>();
+    template.setConnectionFactory(connectionFactory);
+    template.setValueSerializer(new GenericToStringSerializer<>(Order.class));
+    return template;
+  }
+ 
+}
+```
+
+> **Payment Service**
+
+```
+@Configuration
+public class RedisConfig {
+ 
+  @Bean
+  public RedisTemplate<String, Object> redisTemplate(RedisConnectionFactory connectionFactory) {
+    RedisTemplate<String, Object> template = new RedisTemplate<>();
+    template.setConnectionFactory(connectionFactory);
+    template.setValueSerializer(new GenericToStringSerializer<>(Map.class));
+    return template;
+  }
+ 
+}
+```
+
+> **Payment Service**
+
+```
+Map<String, Object> orderMap = (Map<String, Object>) redisTemplate.opsForHash().get("orders", orderId);
+String orderId = (String) orderMap.get("orderId");
+```
+
